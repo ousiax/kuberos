@@ -7,7 +7,9 @@ import (
 	"github.com/spf13/cobra"
 
 	_ "k8s.io/api/admission/v1"
+	"k8s.io/klog/v2"
 
+	"github.com/qqbuby/kuberos/pkg/cmd/serve/admission/controller"
 	cmduitl "github.com/qqbuby/kuberos/pkg/cmd/util"
 )
 
@@ -40,7 +42,6 @@ func NewCmdServer() *cobra.Command {
 
 	cmd.Flags().IntVar(&o.port, flagPort, 443,
 		"Secure port that the webhook listens on")
-	cmd.MarkFlagRequired(flagPort)
 
 	return cmd
 }
@@ -55,7 +56,7 @@ func (o *webhookOptions) Complete() error {
 		TLSConfig: o.tlsConfig,
 	}
 
-	// http.HandleFunc("/always-allow-delay-5s", nil)
+	http.HandleFunc("/image/policy", controller.ServeImagePolicy)
 	http.HandleFunc("/livez", func(w http.ResponseWriter, req *http.Request) { w.Write([]byte("ok")) })
 	http.HandleFunc("/readyz", func(w http.ResponseWriter, req *http.Request) { w.Write([]byte("ok")) })
 
@@ -67,5 +68,6 @@ func (o *webhookOptions) Validate(cmd *cobra.Command) error {
 }
 
 func (o *webhookOptions) Run() error {
+	klog.V(2).Infof("Start serveing: %s", o.server.Addr)
 	return o.server.ListenAndServeTLS("", "")
 }
