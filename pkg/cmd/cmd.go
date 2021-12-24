@@ -5,8 +5,8 @@ import (
 
 	"k8s.io/klog/v2"
 
-	"github.com/qqbuby/kuberos/pkg/cmd/cert"
 	"github.com/qqbuby/kuberos/pkg/cmd/serve"
+	"github.com/qqbuby/kuberos/pkg/cmd/x509"
 
 	"github.com/spf13/cobra"
 )
@@ -19,13 +19,13 @@ func NewKuberosCommand() *cobra.Command {
 		},
 	}
 
-	flags := cmds.Flags()
+	flags := cmds.PersistentFlags()
 	loggingFlags := &flag.FlagSet{}
 	klog.InitFlags(loggingFlags)
 	flags.AddGoFlagSet(loggingFlags)
 
 	cmds.AddCommand(serve.NewCmdServer())
-	cmds.AddCommand(cert.NewCmdCert())
+	cmds.AddCommand(x509.NewCmdCert())
 
 	return cmds
 }

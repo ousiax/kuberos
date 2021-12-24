@@ -1,4 +1,4 @@
-package cert
+package x509
 
 import (
 	"fmt"
@@ -13,8 +13,9 @@ import (
 const (
 	flagKeyOut        = "keyout"
 	flagCertOut       = "out"
-	flagCommonName    = "cn"
-	flagGroups        = "group"
+	flagCommonName    = "common-name"
+	flagOrganization  = "organization"
+	flagDnsNames      = "dns-names"
 	flagExpiration    = "expiration"
 	expirationSeconds = 60 * 60 * 24 * 365 // one year in seconds
 )
@@ -27,40 +28,45 @@ var (
 type CertOptions struct {
 	commonName   string
 	organization []string
+	dnsNames     []string
 }
 
 func NewCmdCert() *cobra.Command {
 	o := CertOptions{}
 
 	cmd := &cobra.Command{
-		Use:   "cert",
+		Use:   "self-signed-cert",
 		Short: "Create self-signed certificate.",
 		Run: func(cmd *cobra.Command, args []string) {
-			cmduitl.CheckErr(o.Complete())
+			cmduitl.CheckErr(o.Complete(cmd, args))
 			cmduitl.CheckErr(o.Validate())
 			cmduitl.CheckErr(o.Run())
 		},
 	}
 
-	cmd.Flags().StringVar(&o.commonName, flagCommonName, "", "CommonName")
-	cmd.MarkFlagRequired(flagCommonName)
-	cmd.Flags().StringArrayVar(&o.organization, flagGroups, nil, "Organization")
-	cmd.MarkFlagRequired(flagGroups)
+	cmd.Flags().StringVarP(&o.commonName, flagCommonName, "u", "", "CommonName")
+	cmd.Flags().StringArrayVarP(&o.organization, flagOrganization, "g", nil, "Organization")
+	cmd.Flags().StringArrayVarP(&o.dnsNames, flagDnsNames, "n", nil, "Subject Alternate DNS Names.")
 
-	cmd.Flags().StringVar(&keyOut, flagKeyOut, "",
-		"This specifies the output filename to write a key to or standard output if this option is not specified.")
+	cmd.Flags().StringVarP(&keyOut, flagKeyOut, "k", "",
+		"This specifies the output filename to write the private key in PKCS #8 PEM format to or standard output if this option is not specified.")
 
-	cmd.Flags().StringVar(&certOut, flagCertOut, "",
-		"Outputs the certificate block in PEM format. - default stdout")
+	cmd.Flags().StringVarP(&certOut, flagCertOut, "o", "",
+		"This specifies the output filename to write the certificate in PEM format to or standard output if this option is not specified.")
 
 	return cmd
 }
 
-func (o *CertOptions) Validate() error {
+func (o *CertOptions) Complete(cmd *cobra.Command, args []string) error {
+	if cn := cmduitl.GetFlagString(cmd, flagCommonName); len(cn) == 0 {
+		cmd.Usage()
+		os.Exit(1)
+
+	}
 	return nil
 }
 
-func (o *CertOptions) Complete() error {
+func (o *CertOptions) Validate() error {
 	return nil
 }
 
