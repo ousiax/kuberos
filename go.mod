@@ -1,4 +1,4 @@
-module github.com/qqbuby/kube-admit
+module github.com/qqbuby/kuberos
 
 go 1.17
 

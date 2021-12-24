@@ -5,15 +5,15 @@ import (
 
 	"k8s.io/klog/v2"
 
-	"github.com/qqbuby/kube-admit/pkg/cmd/cert"
-	"github.com/qqbuby/kube-admit/pkg/cmd/serve"
+	"github.com/qqbuby/kuberos/pkg/cmd/cert"
+	"github.com/qqbuby/kuberos/pkg/cmd/serve"
 
 	"github.com/spf13/cobra"
 )
 
-func NewAdmitCommand() *cobra.Command {
+func NewKuberosCommand() *cobra.Command {
 	var cmds = &cobra.Command{
-		Use: "admit",
+		Use: "kuberos",
 		Run: func(cmd *cobra.Command, args []string) {
 			cmd.Help()
 		},

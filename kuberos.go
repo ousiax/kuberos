@@ -3,11 +3,11 @@ package main
 import (
 	"os"
 
-	"github.com/qqbuby/kube-admit/pkg/cmd"
+	"github.com/qqbuby/kuberos/pkg/cmd"
 )
 
 func main() {
-	root := cmd.NewAdmitCommand()
+	root := cmd.NewKuberosCommand()
 	if err := root.Execute(); err != nil {
 		os.Exit(1)
 	}

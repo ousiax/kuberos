@@ -8,7 +8,7 @@ import (
 
 	_ "k8s.io/api/admission/v1"
 
-	cmduitl "github.com/qqbuby/kube-admit/pkg/cmd/util"
+	cmduitl "github.com/qqbuby/kuberos/pkg/cmd/util"
 )
 
 const (

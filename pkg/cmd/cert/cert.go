@@ -6,8 +6,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	cmduitl "github.com/qqbuby/kube-admit/pkg/cmd/util"
-	cmduitlpkix "github.com/qqbuby/kube-admit/pkg/cmd/util/pkix"
+	cmduitl "github.com/qqbuby/kuberos/pkg/cmd/util"
+	cmduitlpkix "github.com/qqbuby/kuberos/pkg/cmd/util/pkix"
 )
 
 const (
