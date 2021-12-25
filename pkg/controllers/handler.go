@@ -1,4 +1,4 @@
-package admission
+package controllers
 
 import (
 	"encoding/json"
@@ -7,15 +7,33 @@ import (
 	"net/http"
 
 	admissionv1 "k8s.io/api/admission/v1"
+	admitv1 "k8s.io/api/admission/v1"
+	admissionregistrationv1 "k8s.io/api/admissionregistration/v1"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/serializer"
+	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/klog/v2"
 )
 
-type admitv1Func func(ar admissionv1.AdmissionReview) *admissionv1.AdmissionResponse
+var scheme = runtime.NewScheme()
+var codecs = serializer.NewCodecFactory(scheme)
+
+func init() {
+	addToScheme(scheme)
+}
+
+func addToScheme(scheme *runtime.Scheme) {
+	utilruntime.Must(corev1.AddToScheme(scheme))
+	utilruntime.Must(admissionv1.AddToScheme(scheme))
+	utilruntime.Must(admissionregistrationv1.AddToScheme(scheme))
+}
+
+type admitv1Func func(ar admitv1.AdmissionReview) *admitv1.AdmissionResponse
 
 // Serve handles the http portion of a request prior to handing to an admit
 // function
-func Serve(w http.ResponseWriter, r *http.Request, admit admitv1Func) {
+func serveHTTP(w http.ResponseWriter, r *http.Request, admit admitv1Func) {
 	var body []byte
 	if r.Body != nil {
 		if data, err := ioutil.ReadAll(r.Body); err == nil {
@@ -43,25 +61,24 @@ func Serve(w http.ResponseWriter, r *http.Request, admit admitv1Func) {
 		return
 	}
 
-	var responseObj runtime.Object
-	switch *gvk {
-	case admissionv1.SchemeGroupVersion.WithKind("AdmissionReview"):
-		requestedAdmissionReview, ok := obj.(*admissionv1.AdmissionReview)
-		if !ok {
-			klog.Errorf("Expected v1.AdmissionReview but got: %T", obj)
-			return
-		}
-		responseAdmissionReview := &admissionv1.AdmissionReview{}
-		responseAdmissionReview.SetGroupVersionKind(*gvk)
-		responseAdmissionReview.Response = admit(*requestedAdmissionReview)
-		responseAdmissionReview.Response.UID = requestedAdmissionReview.Request.UID
-		responseObj = responseAdmissionReview
-	default:
+	if *gvk != admitv1.SchemeGroupVersion.WithKind("AdmissionReview") {
 		msg := fmt.Sprintf("Unsupported group version kind: %v", gvk)
 		klog.Error(msg)
 		http.Error(w, msg, http.StatusBadRequest)
 		return
 	}
+
+	requestedAdmissionReview, ok := obj.(*admitv1.AdmissionReview)
+	if !ok {
+		klog.Errorf("Expected v1.AdmissionReview but got: %T", obj)
+		return
+	}
+
+	responseAdmissionReview := &admitv1.AdmissionReview{}
+	responseAdmissionReview.SetGroupVersionKind(*gvk)
+	responseAdmissionReview.Response = admit(*requestedAdmissionReview)
+	responseAdmissionReview.Response.UID = requestedAdmissionReview.Request.UID
+	responseObj := responseAdmissionReview
 
 	klog.V(2).Info(fmt.Sprintf("sending response: %v", responseObj))
 	respBytes, err := json.Marshal(responseObj)

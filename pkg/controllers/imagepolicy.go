@@ -1,10 +1,9 @@
-package controller
+package controllers
 
 import (
 	"net/http"
 	"time"
 
-	"github.com/qqbuby/kuberos/pkg/cmd/serve/admission"
 	admissionv1 "k8s.io/api/admission/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/klog/v2"
@@ -21,5 +20,5 @@ func imagePolicy(ar admissionv1.AdmissionReview) *admissionv1.AdmissionResponse 
 }
 
 func ServeImagePolicy(w http.ResponseWriter, r *http.Request) {
-	admission.Serve(w, r, imagePolicy)
+	serveHTTP(w, r, imagePolicy)
 }

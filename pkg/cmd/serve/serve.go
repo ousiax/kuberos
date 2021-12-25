@@ -1,22 +1,16 @@
 package serve
 
 import (
+	"crypto/tls"
 	"fmt"
 	"net/http"
 
 	"github.com/spf13/cobra"
 
-	_ "k8s.io/api/admission/v1"
 	"k8s.io/klog/v2"
 
-	"github.com/qqbuby/kuberos/pkg/cmd/serve/admission/controller"
 	cmduitl "github.com/qqbuby/kuberos/pkg/cmd/util"
-)
-
-const (
-	flagCertFile = "tls-cert-file"
-	flagKeyFile  = "tls-private-key-file"
-	flagPort     = "port"
+	"github.com/qqbuby/kuberos/pkg/controllers"
 )
 
 func NewCmdServer() *cobra.Command {
@@ -41,24 +35,65 @@ func NewCmdServer() *cobra.Command {
 	cmd.MarkFlagRequired(flagKeyFile)
 
 	cmd.Flags().IntVar(&o.port, flagPort, 443,
-		"Secure port that the webhook listens on")
+		"Secure port that the webhook listens on.")
 
 	return cmd
 }
 
-func (o *webhookOptions) Complete() error {
-	err := o.configTLS()
+const (
+	flagCertFile = "tls-cert-file"
+	flagKeyFile  = "tls-private-key-file"
+	flagPort     = "port"
+)
+
+type webhookOptions struct {
+	certFile string
+	keyFile  string
+	port     int
+
+	mux       *http.ServeMux
+	tlsConfig *tls.Config
+	server    *http.Server
+}
+
+func (o *webhookOptions) configServer() error {
+	sCert, err := tls.LoadX509KeyPair(o.certFile, o.keyFile)
 	if err != nil {
 		return err
 	}
+	o.tlsConfig = &tls.Config{
+		Certificates: []tls.Certificate{sCert},
+		// TODO: uses mutual tls after we agree on what cert the apiserver should use.
+		// ClientAuth:   tls.RequireAndVerifyClientCert,
+	}
+
+	o.mux = http.NewServeMux()
 	o.server = &http.Server{
+		Handler:   o.mux,
 		Addr:      fmt.Sprintf(":%d", o.port),
 		TLSConfig: o.tlsConfig,
 	}
 
-	http.HandleFunc("/image/policy", controller.ServeImagePolicy)
-	http.HandleFunc("/livez", func(w http.ResponseWriter, req *http.Request) { w.Write([]byte("ok")) })
-	http.HandleFunc("/readyz", func(w http.ResponseWriter, req *http.Request) { w.Write([]byte("ok")) })
+	return nil
+}
+
+func (o *webhookOptions) handleFunc(pattern string, handler func(http.ResponseWriter, *http.Request)) {
+	if handler == nil {
+		panic("http: nil handler")
+	}
+	o.mux.HandleFunc(pattern, handler)
+}
+
+func (o *webhookOptions) Complete() error {
+	err := o.configServer()
+	if err != nil {
+		return err
+	}
+
+	o.handleFunc("/livez", func(w http.ResponseWriter, req *http.Request) { w.Write([]byte("ok")) })
+	o.handleFunc("/readyz", func(w http.ResponseWriter, req *http.Request) { w.Write([]byte("ok")) })
+
+	o.handleFunc("/image/policy", controllers.ServeImagePolicy)
 
 	return nil
 }
