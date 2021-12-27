@@ -1,4 +1,4 @@
-package plugins
+package util
 
 import (
 	"encoding/json"
@@ -7,42 +7,12 @@ import (
 	"net/http"
 
 	admissionv1 "k8s.io/api/admission/v1"
-	admissionregistrationv1 "k8s.io/api/admissionregistration/v1"
-	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/serializer"
-	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/klog/v2"
 )
 
-func ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	serveAdmissionReview(w, r, func(ar admissionv1.AdmissionReview) *admissionv1.AdmissionResponse {
-		// klog.V(2).Infof("admitting %s", ar.Request.Kind)
-
-		reviewResponse := admissionv1.AdmissionResponse{}
-		reviewResponse.Allowed = true
-		reviewResponse.Result = &metav1.Status{Message: "this webhook allows all requests"}
-		return &reviewResponse
-	})
-}
-
-var scheme = runtime.NewScheme()
-var codecs = serializer.NewCodecFactory(scheme)
-
-func init() {
-	addToScheme(scheme)
-}
-
-func addToScheme(scheme *runtime.Scheme) {
-	utilruntime.Must(corev1.AddToScheme(scheme))
-	utilruntime.Must(admissionv1.AddToScheme(scheme))
-	utilruntime.Must(admissionregistrationv1.AddToScheme(scheme))
-}
-
 // Serve handles the http portion of a request prior to handing to an admit
 // function
-func serveAdmissionReview(w http.ResponseWriter, r *http.Request, admit func(ar admissionv1.AdmissionReview) *admissionv1.AdmissionResponse) {
+func ServeAdmission(w http.ResponseWriter, r *http.Request, admit func(ar *admissionv1.AdmissionReview) *admissionv1.AdmissionResponse) {
 	var body []byte
 	if r.Body != nil {
 		if data, err := ioutil.ReadAll(r.Body); err == nil {
@@ -61,7 +31,7 @@ func serveAdmissionReview(w http.ResponseWriter, r *http.Request, admit func(ar 
 
 	klog.V(2).Info(fmt.Sprintf("handling request: %s", body))
 
-	deserializer := codecs.UniversalDeserializer()
+	deserializer := Codecs.UniversalDeserializer()
 	obj, gvk, err := deserializer.Decode(body, nil, nil)
 	if err != nil {
 		msg := fmt.Sprintf("Request could not be decoded: %v", err)
@@ -85,7 +55,7 @@ func serveAdmissionReview(w http.ResponseWriter, r *http.Request, admit func(ar 
 
 	responseAdmissionReview := &admissionv1.AdmissionReview{}
 	responseAdmissionReview.SetGroupVersionKind(*gvk)
-	responseAdmissionReview.Response = admit(*requestedAdmissionReview)
+	responseAdmissionReview.Response = admit(requestedAdmissionReview)
 	responseAdmissionReview.Response.UID = requestedAdmissionReview.Request.UID
 	responseObj := responseAdmissionReview
 

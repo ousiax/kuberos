@@ -71,7 +71,7 @@ func (o *CertOptions) Validate() error {
 }
 
 func (o *CertOptions) Run() error {
-	key, cert, err := cmduitlpkix.CreateSelfSignedCertificate(o.commonName, o.organization, nil)
+	key, cert, err := cmduitlpkix.CreateSelfSignedCertificate(o.commonName, o.organization, o.dnsNames)
 
 	if err != nil {
 		return err
