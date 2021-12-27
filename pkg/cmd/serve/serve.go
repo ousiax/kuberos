@@ -10,7 +10,7 @@ import (
 	"k8s.io/klog/v2"
 
 	cmduitl "github.com/qqbuby/kuberos/pkg/cmd/util"
-	"github.com/qqbuby/kuberos/pkg/controllers"
+	"github.com/qqbuby/kuberos/pkg/plugins"
 )
 
 func NewCmdServer() *cobra.Command {
@@ -93,7 +93,7 @@ func (o *webhookOptions) Complete() error {
 	o.handleFunc("/livez", func(w http.ResponseWriter, req *http.Request) { w.Write([]byte("ok")) })
 	o.handleFunc("/readyz", func(w http.ResponseWriter, req *http.Request) { w.Write([]byte("ok")) })
 
-	o.handleFunc("/image/policy", controllers.ServeImagePolicy)
+	o.handleFunc("/api/v1/plugins", plugins.ServeHTTP)
 
 	return nil
 }
