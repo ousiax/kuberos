@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: kuberos
+  name: kuberos
+  namespace: default
+spec:
+  selector:
+    app: kuberos
+  type: ClusterIP
+  ports:
+    - port: 443
+      protocol: TCP
+      targetPort: 8080

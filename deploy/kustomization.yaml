@@ -1,0 +1,13 @@
+resources:
+  - ./manifests/admissionregistration.yaml
+  - ./manifests/deployment.yaml
+  - ./manifests/service.yaml
+secretGenerator:
+  - name: kuberos
+    namespace: default
+    files:
+      - tls.crt=./manifests/tls/cert.crt
+      - tls.key=./manifests/tls/cert.key
+generatorOptions:
+  disableNameSuffixHash: true
+

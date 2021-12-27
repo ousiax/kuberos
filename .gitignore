@@ -17,3 +17,5 @@
 # misc
 kuberos
 *.pem
+*.crt
+*.key

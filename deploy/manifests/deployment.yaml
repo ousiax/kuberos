@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: kuberos
+  name: kuberos
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kuberos
+  template:
+    metadata:
+      labels:
+        app: kuberos
+    spec:
+      containers:
+        - name: kuberos
+          image: qqbuby/kuberos:1.32
+          command:
+            - /kuberos
+            - serve
+            - --port=8080
+            - --tls-cert-file=/tls/tls.crt 
+            - --tls-private-key-file=/tls/tls.key 
+            - -v=5
+          volumeMounts:
+            - mountPath: /tls
+              name: tls
+              readOnly: true
+          ports:
+            - name: webhook
+              containerPort: 8080
+          resources:
+            requests:
+              cpu: 50m
+              memory: 50Mi
+            limits:
+              cpu: 50m
+              memory: 50Mi
+          livenessProbe:
+            httpGet:
+              scheme: HTTPS
+              path: /livez
+              port: 8080
+          readinessProbe:
+            httpGet:
+              scheme: HTTPS
+              path: /readyz
+              port: 8080
+      volumes: 
+        - name: tls
+          secret:
+            secretName: kuberos 
