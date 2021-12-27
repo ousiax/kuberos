@@ -93,7 +93,7 @@ func (o *webhookOptions) Complete() error {
 	o.handleFunc("/livez", func(w http.ResponseWriter, req *http.Request) { w.Write([]byte("ok")) })
 	o.handleFunc("/readyz", func(w http.ResponseWriter, req *http.Request) { w.Write([]byte("ok")) })
 
-	o.handleFunc("/api/v1/plugins", plugins.ServeHTTP)
+	o.handleFunc("/api/v1/kuberos", plugins.ServeHTTP)
 
 	return nil
 }
