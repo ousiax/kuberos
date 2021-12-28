@@ -3,13 +3,14 @@ package pods
 import (
 	"fmt"
 	"net/http"
-	"strings"
+	"os"
 
 	admissionv1 "k8s.io/api/admission/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/klog/v2"
 
+	"github.com/qqbuby/kuberos/pkg/plugins/pods/containers"
 	"github.com/qqbuby/kuberos/pkg/plugins/util"
 )
 
@@ -31,6 +32,15 @@ func ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return util.V1AdmissionResponse(err)
 		}
 
+		registry, ok := os.LookupEnv("REQUIRED_IMAGE_REGISTRY")
+		if !ok {
+			klog.Info("could not retrieve the value of the environment variable named %s", registry)
+			reviewResponse := admissionv1.AdmissionResponse{}
+			reviewResponse.Allowed = true
+			reviewResponse.Result = &metav1.Status{Message: "this webhook allows all requests"}
+			return &reviewResponse
+		}
+
 		images := make(map[string]bool)
 		for _, c := range pod.Spec.InitContainers {
 			images[c.Image] = true
@@ -39,20 +49,20 @@ func ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			images[c.Image] = true
 		}
 
-		klog.V(2).Infof("Pod: %s, Images:\n", pod.Name)
-		for k := range images {
-			klog.V(2).Infof("\t%s", k)
-			parts := strings.Split(k, "/")
-			for _, p := range parts {
-				klog.V(2).Infof("\t\t: %s\n", p)
+		org := os.Getenv("REQUIRED_IMAGE_ORG")
+		for img := range images {
+			ref, err := containers.ParseImageRef(img)
+			if err != nil {
+				return util.V1AdmissionResponse(err)
+			}
+			if ref.Registry != registry {
+				return util.V1AdmissionResponse(fmt.Errorf("%s must be at [%s]", img, registry))
+			}
+			if org != "" && ref.Org != org {
+				return util.V1AdmissionResponse(fmt.Errorf("%s must be at [%s/%s]", img, registry, org))
 			}
 		}
 
-		klog.V(2).Infof("Pod: %s, containers: %s", &pod.Name, &pod.Spec.Containers)
-
-		reviewResponse := admissionv1.AdmissionResponse{}
-		reviewResponse.Allowed = true
-		reviewResponse.Result = &metav1.Status{Message: "this webhook allows all requests"}
-		return &reviewResponse
+		return nil
 	})
 }
