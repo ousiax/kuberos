@@ -20,7 +20,7 @@ type ImageRef struct {
 
 func ParseImageRef(image string) (*ImageRef, error) {
 	if !re.MatchString(image) {
-		return nil, fmt.Errorf("`image` must be (registry)/(org)/(name):(tag)[@digest]")
+		return nil, fmt.Errorf("`image` must match (registry)/(org)/(name):(tag)[@digest]")
 	}
 
 	matches := re.FindStringSubmatch(image)
