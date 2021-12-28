@@ -37,7 +37,7 @@ func ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			klog.Info("could not retrieve the value of the environment variable named %s", registry)
 			reviewResponse := admissionv1.AdmissionResponse{}
 			reviewResponse.Allowed = true
-			reviewResponse.Result = &metav1.Status{Message: "this webhook allows all requests"}
+			reviewResponse.Result = &metav1.Status{Message: "Kuberos: allows the request without admit"}
 			return &reviewResponse
 		}
 
@@ -50,19 +50,33 @@ func ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 
 		org := os.Getenv("REQUIRED_IMAGE_ORG")
+		reviewResponse := admissionv1.AdmissionResponse{}
 		for img := range images {
 			ref, err := containers.ParseImageRef(img)
 			if err != nil {
-				return util.V1AdmissionResponse(err)
+				reviewResponse.Allowed = false
+				reviewResponse.Result = &metav1.Status{
+					Message: err.Error(),
+				}
+				return &reviewResponse
 			}
 			if ref.Registry != registry {
-				return util.V1AdmissionResponse(fmt.Errorf("%s must be at [%s]", img, registry))
+				reviewResponse.Allowed = false
+				reviewResponse.Result = &metav1.Status{
+					Message: fmt.Sprintf("Kuberos: %s must be at [%s]", img, registry),
+				}
+				return &reviewResponse
 			}
 			if org != "" && ref.Org != org {
-				return util.V1AdmissionResponse(fmt.Errorf("%s must be at [%s/%s]", img, registry, org))
+				reviewResponse.Allowed = false
+				reviewResponse.Result = &metav1.Status{
+					Message: fmt.Sprintf("Kuberos: %s must be at [%s/%s]", img, registry, org),
+				}
+				return &reviewResponse
 			}
 		}
-
-		return nil
+		reviewResponse.Allowed = true
+		reviewResponse.Result = &metav1.Status{Message: "Kuberos: allows the request"}
+		return &reviewResponse
 	})
 }
