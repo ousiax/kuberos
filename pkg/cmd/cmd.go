@@ -13,7 +13,8 @@ import (
 
 func NewKuberosCommand() *cobra.Command {
 	var cmds = &cobra.Command{
-		Use: "kuberos",
+		Use:     "kuberos",
+		Version: "v0.1",
 		Run: func(cmd *cobra.Command, args []string) {
 			cmd.Help()
 		},
