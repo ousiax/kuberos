@@ -18,7 +18,7 @@ func ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	util.ServeAdmission(w, r, func(ar *admissionv1.AdmissionReview) *admissionv1.AdmissionResponse {
 		podResource := metav1.GroupVersionResource{Group: "", Version: "v1", Resource: "pods"}
 		if ar.Request.Resource != podResource {
-			err := fmt.Errorf("expect resource to be %s", podResource)
+			err := fmt.Errorf("uid: %s, expect resource to be %s", ar.Request.UID, podResource)
 			klog.Error(err)
 			return util.V1AdmissionResponse(err)
 		}
@@ -30,7 +30,7 @@ func ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			klog.Error(err)
 			return util.V1AdmissionResponse(err)
 		}
-		klog.V(2).Infof("admitting pods: %s/%s", pod.ObjectMeta.Namespace, pod.ObjectMeta.Name)
+		klog.V(2).Infof("admitting pod: %s/%s", pod.ObjectMeta.Namespace, pod.ObjectMeta.Name)
 
 		registry, ok := os.LookupEnv("REQUIRED_IMAGE_REGISTRY")
 		if !ok {
@@ -63,14 +63,14 @@ func ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			if ref.Registry != registry {
 				reviewResponse.Allowed = false
 				reviewResponse.Result = &metav1.Status{
-					Message: fmt.Sprintf("Kuberos: %s must be at [%s]", img, registry),
+					Message: fmt.Sprintf("Kuberos: pod: %s/%s: %s must be at [%s]", pod.ObjectMeta.Namespace, pod.ObjectMeta.Name, img, registry),
 				}
 				return &reviewResponse
 			}
 			if org != "" && ref.Org != org {
 				reviewResponse.Allowed = false
 				reviewResponse.Result = &metav1.Status{
-					Message: fmt.Sprintf("Kuberos: %s must be at [%s/%s]", img, registry, org),
+					Message: fmt.Sprintf("Kuberos: pod: %s/%s: %s must be at [%s/%s]", pod.ObjectMeta.Namespace, pod.ObjectMeta.Name, img, registry, org),
 				}
 				return &reviewResponse
 			}
