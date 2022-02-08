@@ -20,7 +20,7 @@ type ImageRef struct {
 
 func ParseImageRef(image string) (*ImageRef, error) {
 	if !re.MatchString(image) {
-		return nil, fmt.Errorf("`image` must match (registry)/(org)/(name):(tag)[@digest]")
+		return nil, fmt.Errorf("`image: %s` must match (registry)/(org)/(name):(tag)[@digest]", image)
 	}
 
 	matches := re.FindStringSubmatch(image)
@@ -31,7 +31,6 @@ func ParseImageRef(image string) (*ImageRef, error) {
 		Tag:      matches[4],
 		Digest:   matches[5],
 	}
-	fmt.Printf("%s\n", ref)
 	return ref, nil
 }
 
