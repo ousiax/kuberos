@@ -11,3 +11,10 @@ resources:
   - manifests/job-patch/serviceaccount.yaml
   - manifests/job-patch/admission-certgen.yaml
   - manifests/job-patch/admission-patch.yaml
+configMapGenerator:
+  - name: pod-policy
+    literals:
+      - image.registry=docker.io
+      - image.org=qqbuby
+generatorOptions:
+  disableNameSuffixHash: true

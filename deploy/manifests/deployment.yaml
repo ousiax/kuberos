@@ -23,16 +23,22 @@ spec:
           image: qqbuby/kuberos:v0.1.0
           env:
             - name: REQUIRED_IMAGE_REGISTRY
-              value: docker.io
+              valueFrom:
+                configMapKeyRef:
+                  name: pod-policy
+                  key: image.registry
             - name: REQUIRED_IMAGE_ORG
-              value: qqbuby
+              valueFrom:
+                configMapKeyRef:
+                  name: pod-policy
+                  key: image.org
           command:
             - /kuberos
             - serve
             - --port=8080
             - --tls-cert-file=/usr/local/certificates/cert 
             - --tls-private-key-file=/usr/local/certificates/key 
-            - -v=5
+            - -v=2
           volumeMounts:
             - mountPath: /usr/local/certificates/
               name: webhook-cert
@@ -61,3 +67,6 @@ spec:
         - name: webhook-cert
           secret:
             secretName: kuberos-admission 
+        - name: pod-policy
+          configMap:
+            name: pod-policy 
