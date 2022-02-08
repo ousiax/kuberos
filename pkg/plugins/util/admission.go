@@ -29,7 +29,7 @@ func ServeAdmission(w http.ResponseWriter, r *http.Request, admit func(ar *admis
 		return
 	}
 
-	klog.V(2).Info(fmt.Sprintf("handling request: %s", body))
+	klog.V(4).Infof("handling request: %s", body)
 
 	deserializer := Codecs.UniversalDeserializer()
 	obj, gvk, err := deserializer.Decode(body, nil, nil)
@@ -59,7 +59,8 @@ func ServeAdmission(w http.ResponseWriter, r *http.Request, admit func(ar *admis
 	responseAdmissionReview.Response.UID = requestedAdmissionReview.Request.UID
 	responseObj := responseAdmissionReview
 
-	klog.V(2).Info(fmt.Sprintf("sending response: %v", responseObj))
+	klog.V(4).Infof("sending response: %v", responseObj)
+	klog.V(2).Infof("status: %s, message: %s", responseObj.Response.Result.Status, responseObj.Response.Result.Message)
 	respBytes, err := json.Marshal(responseObj)
 	if err != nil {
 		klog.Error(err)

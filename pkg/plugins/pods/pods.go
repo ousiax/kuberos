@@ -16,7 +16,6 @@ import (
 
 func ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	util.ServeAdmission(w, r, func(ar *admissionv1.AdmissionReview) *admissionv1.AdmissionResponse {
-		klog.V(2).Info("admitting pods")
 		podResource := metav1.GroupVersionResource{Group: "", Version: "v1", Resource: "pods"}
 		if ar.Request.Resource != podResource {
 			err := fmt.Errorf("expect resource to be %s", podResource)
@@ -31,10 +30,11 @@ func ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			klog.Error(err)
 			return util.V1AdmissionResponse(err)
 		}
+		klog.V(2).Infof("admitting pods: %s/%s", &pod.ObjectMeta.Namespace, &pod.ObjectMeta.Name)
 
 		registry, ok := os.LookupEnv("REQUIRED_IMAGE_REGISTRY")
 		if !ok {
-			klog.Info("could not retrieve the value of the environment variable named %s", registry)
+			klog.Warning("allows the request without admit: could not retrieve the value of the environment variable named %s", registry)
 			reviewResponse := admissionv1.AdmissionResponse{}
 			reviewResponse.Allowed = true
 			reviewResponse.Result = &metav1.Status{Message: "Kuberos: allows the request without admit"}
