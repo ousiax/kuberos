@@ -30,7 +30,7 @@ func ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			klog.Error(err)
 			return util.V1AdmissionResponse(err)
 		}
-		klog.V(2).Infof("admitting pods: %s/%s", &pod.ObjectMeta.Namespace, &pod.ObjectMeta.Name)
+		klog.V(2).Infof("admitting pods: %s/%s", pod.ObjectMeta.Namespace, pod.ObjectMeta.Name)
 
 		registry, ok := os.LookupEnv("REQUIRED_IMAGE_REGISTRY")
 		if !ok {

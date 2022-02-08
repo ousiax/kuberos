@@ -59,8 +59,8 @@ func ServeAdmission(w http.ResponseWriter, r *http.Request, admit func(ar *admis
 	responseAdmissionReview.Response.UID = requestedAdmissionReview.Request.UID
 	responseObj := responseAdmissionReview
 
+	klog.V(2).Infof("%s: %s", responseObj.Response.Result.Message, responseObj.Response.UID)
 	klog.V(4).Infof("sending response: %v", responseObj)
-	klog.V(2).Infof("status: %s, message: %s", responseObj.Response.Result.Status, responseObj.Response.Result.Message)
 	respBytes, err := json.Marshal(responseObj)
 	if err != nil {
 		klog.Error(err)
