@@ -1,0 +1,37 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: admission-patch
+  namespace: kuberos
+  labels:
+    app.kubernetes.io/name: kuberos
+spec:
+  template:
+    metadata:
+      name: admission-patch
+      labels:
+        app.kubernetes.io/name: kuberos
+    spec:
+      containers:
+        - name: patch
+          image: k8s.gcr.io/ingress-nginx/kube-webhook-certgen:v1.1.1
+          imagePullPolicy: IfNotPresent
+          args:
+            - patch
+            - --webhook-name=admission.kuberos.io
+            - --namespace=$(POD_NAMESPACE)
+            - --patch-mutating=false
+            - --secret-name=kuberos-admission
+            - --patch-failure-policy=Fail
+          env:
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+          securityContext:
+            allowPrivilegeEscalation: false
+      restartPolicy: OnFailure
+      serviceAccountName: kuberos-admission
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 2000

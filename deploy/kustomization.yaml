@@ -1,13 +1,13 @@
+namespace: kuberos
 resources:
-  - ./manifests/admissionregistration.yaml
-  - ./manifests/deployment.yaml
-  - ./manifests/service.yaml
-secretGenerator:
-  - name: kuberos
-    namespace: default
-    files:
-      - tls.crt=./manifests/tls/cert.crt
-      - tls.key=./manifests/tls/cert.key
-generatorOptions:
-  disableNameSuffixHash: true
-
+  - manifests/namespace.yaml
+  - manifests/admissionregistration.yaml
+  - manifests/service.yaml
+  - manifests/deployment.yaml
+  - manifests/job-patch/clusterrolebinding.yaml
+  - manifests/job-patch/clusterrole.yaml
+  - manifests/job-patch/rolebinding.yaml
+  - manifests/job-patch/role.yaml
+  - manifests/job-patch/serviceaccount.yaml
+  - manifests/job-patch/admission-certgen.yaml
+  - manifests/job-patch/admission-patch.yaml
