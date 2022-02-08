@@ -2,18 +2,18 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
-    app: kuberos
+    app.kubernetes.io/name: kuberos
   name: kuberos
-  namespace: default
+  namespace: kuberos
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: kuberos
+      app.kubernetes.io/name: kuberos
   template:
     metadata:
       labels:
-        app: kuberos
+        app.kubernetes.io/name: kuberos
     spec:
       securityContext:
         runAsUser: 1000
@@ -30,12 +30,12 @@ spec:
             - /kuberos
             - serve
             - --port=8080
-            - --tls-cert-file=/tls/tls.crt 
-            - --tls-private-key-file=/tls/tls.key 
+            - --tls-cert-file=/usr/local/certificates/cert 
+            - --tls-private-key-file=/usr/local/certificates/key 
             - -v=5
           volumeMounts:
-            - mountPath: /tls
-              name: tls
+            - mountPath: /usr/local/certificates/
+              name: webhook-cert
               readOnly: true
           ports:
             - name: webhook
@@ -58,6 +58,6 @@ spec:
               path: /readyz
               port: 8080
       volumes: 
-        - name: tls
+        - name: webhook-cert
           secret:
-            secretName: kuberos 
+            secretName: kuberos-admission 

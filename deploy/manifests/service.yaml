@@ -2,12 +2,12 @@ apiVersion: v1
 kind: Service
 metadata:
   labels:
-    app: kuberos
+    app.kubernetes.io/name: kuberos
   name: kuberos
   namespace: default
 spec:
   selector:
-    app: kuberos
+    app.kubernetes.io/name: kuberos
   type: ClusterIP
   ports:
     - port: 443

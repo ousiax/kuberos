@@ -1,0 +1,14 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: kuberos-admission
+  labels:
+    app.kubernetes.io/name: kuberos
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: kuberos-admission
+subjects:
+  - kind: ServiceAccount
+    name: kuberos-admission
+    namespace: kuberos

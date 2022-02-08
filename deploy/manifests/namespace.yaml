@@ -1,0 +1,7 @@
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: kuberos
+  labels:
+    app.kubernetes.io/name: kuberos

@@ -1,0 +1,35 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: admission-certgen
+  namespace: kuberos
+  labels:
+    app.kubernetes.io/name: kuberos
+spec:
+  template:
+    metadata:
+      name: admission-certgen
+      labels:
+        app.kubernetes.io/name: kuberos
+    spec:
+      containers:
+        - name: create
+          image: k8s.gcr.io/ingress-nginx/kube-webhook-certgen:v1.1.1
+          imagePullPolicy: IfNotPresent
+          args:
+            - create
+            - --host=kuberos,kuberos.$(POD_NAMESPACE).svc
+            - --namespace=$(POD_NAMESPACE)
+            - --secret-name=kuberos-admission
+          env:
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+          securityContext:
+            allowPrivilegeEscalation: false
+      restartPolicy: OnFailure
+      serviceAccountName: kuberos-admission
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 2000
