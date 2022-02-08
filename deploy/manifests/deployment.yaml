@@ -15,9 +15,17 @@ spec:
       labels:
         app: kuberos
     spec:
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
       containers:
         - name: kuberos
-          image: qqbuby/kuberos:1.32
+          image: qqbuby/kuberos:v0.1.0
+          env:
+            - name: REQUIRED_IMAGE_REGISTRY
+              value: docker.io
+            - name: REQUIRED_IMAGE_ORG
+              value: qqbuby
           command:
             - /kuberos
             - serve
