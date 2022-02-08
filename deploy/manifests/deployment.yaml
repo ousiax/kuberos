@@ -20,7 +20,7 @@ spec:
         runAsGroup: 1000
       containers:
         - name: kuberos
-          image: qqbuby/kuberos:v0.1.0
+          image: qqbuby/kuberos:v0.1.1
           env:
             - name: REQUIRED_IMAGE_REGISTRY
               valueFrom:
