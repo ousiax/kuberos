@@ -1,17 +1,13 @@
-1. Generating self-signed certificate
+1. Custom the ConfigMap `pod-policy` at `kustomization.yaml` as below:
 
-```sh
-../kuberos self-signed-cert \
-    -u kuberos.default.svc \
-    -n kuberos.default.svc \
-    -o manifests/tls/cert.crt \
-    -k manifests/tls/cert.key
+```yaml
+configMapGenerator:
+  - name: pod-policy
+    literals:
+      - image.registry=docker.io
+      - image.org=qqbuby
 ```
 
-2. Set `caBundle` in `admissionregistration.yaml` with `manifests/tls/cert.crt`
+2. Apply manifests with `kubectl apply -k .`
 
-```sh
-cat manifests/tls/cert.crt | base64 | tr -d '\n'
-```
-
-3. Apply manifests with `kubectl apply -k .`
+3. Use `kubectl label ns [namespace] pod-policy.kuberos.io=true`.
